@@ -38,12 +38,9 @@ Parameters to adjust:
 * nThreads: 1 (multithread BLAST)
 * nHits: 500 (specify number of BLAST hits to keep)
 * evalue: 1e-5 (specify evalue cutoff)
-<<<<<<< HEAD
 * selfGroup: None (specify TaxIDs of self-group, comma delimited)
 * closeGroup: None (specify TaxIDs of close group, comma delimited)
-=======
 * selfGroup: None (specify TaxIDs of self-group)
 * closeGroup: None (specify TaxIDs of close group)
->>>>>>> 6705cdc92f929421e3c950a892442b83380459ec
 * modKCO: 1 (0 to turn off conservative cutoffs)
 * selfLow: 0 (1 to use self-group cutoffs)
