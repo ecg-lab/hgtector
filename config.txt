@@ -1,0 +1,5 @@
+selfGroup=651456
+closeGroup=2419
+nThreads=16
+interactive=0
+
