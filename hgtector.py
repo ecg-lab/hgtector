@@ -1090,7 +1090,7 @@ def _write_blast_matches(file, blast_result={}, self=[], names_db={}):
             w.write('%s\t%s\t%s\t%f\n' % (seq, taxid, _get_sci_name(taxid, names_db), score))
 
 
-def write_results(file, info={}, blast_results={}, weights={}, hgt_results={}, names_db={}, self_taxids=[], write_matches=False):
+def write_results(file, info={}, blast_results={}, weights={}, hgt_results={}, names_db={}, self_taxids=[], write_matches=False, close_taxids=[]):
     """Write results from pipeline to a file
     """
 
@@ -1122,31 +1122,35 @@ def write_results(file, info={}, blast_results={}, weights={}, hgt_results={}, n
             os.mkdir(match_dir)
 
     with open(file, 'wb') as w:
-        w.write("Query\tLength\tProduct\tHits\tSelf\tClose\tDistal\tHGT\tMatchTaxID\tMatchTaxName\tMatchSeqID\n")
+        w.write("Query\tLength\tProduct\tHits\tSelf\tClose\tDistal\tHGT\tRecent\tMatchTaxID\tMatchTaxName\tMatchSeqID\n")
         for query in genes:
             try:
                 (product, length) = info.get(query, ('', 0))
                 length = "%i" % length
-                hits = "%i" % len(blast_results[query])
-                (self, close, distal) = ["%.3f" % x for x in weights[query]]
-                if hgt_results[query]:
+                hits = "%i" % len(blast_results.get(query, 0))
+                (self, close, distal) = ["%.3f" % x for x in weights.get(query, (0,0,0))]
+                recent = '0'
+                if hgt_results.get(query):
                     hgt = '1'
                     if write_matches:
                         match_file = os.path.join(match_dir, "%s.txt" % query)
                         _write_blast_matches(match_file, blast_results[query], self_taxids, names_db)
                 else:
                     hgt = '0'
-                if blast_results[query]:
+                if blast_results.get(query):
                     (match_seq, match_tax) = _get_best_match(blast_results[query], self_taxids)
                     match_tax_name = _get_sci_name(match_tax, names_db)
                     # fix if there were duplicate GIs
                     if '.' in match_seq:
                         match_seq = match_seq.split('.')[0]
+                    if hgt == '1' and match_tax and match_tax not in close_taxids:
+                        recent = '1'                        
+                    
                 else:
                     match_seq = ""
                     match_tax = ""
                     match_tax_name = ""
-                w.write("\t".join([query, length, product, hits, self, close, distal, hgt, match_tax, match_tax_name, match_seq])+"\n")
+                w.write("\t".join([query, length, product, hits, self, close, distal, hgt, recent, match_tax, match_tax_name, match_seq])+"\n")
             except Exception as e:
                 print e
                 break
@@ -1423,7 +1427,7 @@ def pipeline(directory=None, override_config={}, multispecies_file=MULTISPECIES_
             fileout = os.path.join('result', '%s.txt' % input_file)
             print "Writing results to %s..." % fileout
 
-            write_results(fileout, info[input_file], blast_results[folder], weights, hgt_results, names_db, self_taxids, write_matches)
+            write_results(fileout, info[input_file], blast_results[folder], weights, hgt_results, names_db, self_taxids, write_matches, close_taxids)
             print "Done. %s is finished. Find results in the result folder." % input_file
 
         print "HGTector method complete."
